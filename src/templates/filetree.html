@@ -1,0 +1,27 @@
+<div class='directory' >
+    <div class='name'>
+        <div>
+            <span rv-attr-class='icon'></span>
+            {name}
+            <span class="hover typcn typcn-spanner" rv-on-click='showSettings' rv-if='files'></span>
+        </div>
+
+        <div
+            class='create'
+            rv-class-show='settings'
+        >
+            <div class='container' rv-if='files'>
+                <div class='horizontal-layout item' >
+                    <span class="typcn typcn-document-text"></span>
+                    <input type='text' placeholder='New File'/>
+                </div>
+                    <!--
+                    <div class='horizontal-layout item' >
+                        <span class="typcn typcn-folder"></span>
+                        <input type='text' placeholder='New Folder' />
+                    </div>-->
+            </div>
+        </div>
+    </div>
+    <div rv-filetree='files'></div>
+</div>
