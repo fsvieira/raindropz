@@ -134,7 +134,7 @@ Run.prototype.init = function (el) {
                     .attr("cy", branch.metadata.geometry.position.y)
                     .attr("r", 0.02)
                     .on("click", function () {
-                        console.log("CLICK" + this.branch.metadata.id);
+                        self.info = this.branch.metadata.id;
                     }.bind({branch: branch}));
             }
 
