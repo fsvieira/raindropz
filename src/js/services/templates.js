@@ -3,12 +3,13 @@ var moment = require('moment');
 
 var languages;
 
-rivets.binders.width = function(el, value) {
-	el.style.width = value + "%";
-};
-
 rivets.binders["attr-class"] = function(el, value) {
 	el.className = value;
+};
+
+/*
+rivets.binders.width = function(el, value) {
+	el.style.width = value + "%";
 };
 
 rivets.binders.image = function (el, value) {
@@ -22,6 +23,7 @@ rivets.formatters.date = function (value) {
 rivets.formatters.translate = function (language, value) {
 	return languages[language][value];
 };
+*/
 
 rivets.load = function (elem, file, state) {
 	return fetch(file).then(
@@ -36,8 +38,8 @@ rivets.load = function (elem, file, state) {
 				return html.text().then(
 					function (html) {
 						el.innerHTML = html;
-						rivets.bind(el, state);
-						return state;							
+						state.view = rivets.bind(el, state);
+						return state;
 					}
 				);
 					
