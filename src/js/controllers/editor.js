@@ -38,7 +38,6 @@ Editor.prototype.init = function (el) {
     };
     
     function save () {
-        // var data = el.getElementsByClassName('editor')[0].value;
         return filesystem.write(self.file.id, dataChange).then(function (id) {
             self.file.change = false;
             return id;
@@ -56,14 +55,7 @@ Editor.prototype.init = function (el) {
         });
     };
     
-    this.container = document.createElement("div");
-    this.container.style.width = '100%';
-    
-    this.container.setAttribute("rv-show", "show");
-
-    templates.load(this.container, "./templates/editor.html", this);
-
-    el.appendChild(this.container);
+    templates.load(el, "./templates/editor.html", this);
 };
 
 module.exports = Editor;

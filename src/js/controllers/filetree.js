@@ -26,7 +26,7 @@ function fileicon (file) {
 	return icon;
 }
 
-function showSettings () {
+function showSettings (ev) {
 	/*if (this.file.childs) {
 		templates.load(
 			"rz-work-area", 
@@ -41,6 +41,7 @@ function showSettings () {
 			this.file
 		);
 	}*/
+	ev.stopPropagation();
 	events.trigger("settings", this.file);
 }
 
@@ -108,22 +109,37 @@ function FileTree (el) {
     this.init(el);
 }
 
+function setup () {
+	return fetch("./res/introduction.z").then(
+		function (response) {
+			if (response.status === 200) {
+				response.text().then(
+					function (data) {
+						console.log(data);
+						return filesystem.create(
+					     	"introduction.z", 
+					     	{
+					     		silent: true,
+					     		type: filesystem.types.FILE,
+					     		data: data// "(yellow red)\n(yellow blue)\n?('x 'y)\n"
+					     	}
+					     );
+					}
+				);
+			}
+		}
+	);
+}
+
 FileTree.prototype.init = function (el, elWorkArea) {
-	filesystem.create(
-     	"introduction.z", 
-     	{
-     		silent: true,
-     		type: filesystem.types.FILE,
-     		data: "(yellow red)\n(yellow blue)\n?('x 'y)\n"
-     	}
-     ).then(function () {
-	    filesystem.ls().then(function (root) {
+	return setup().then(function () {
+		filesystem.ls().then(function (root) {
 	    	filetree(
 	    		document.getElementById(el),
 	    		root
 			);
 	    });
-     });
+	});
 };
 
 module.exports = FileTree;

@@ -19,11 +19,6 @@ body {
     height: 100%;
 }
 
-
-.horizontal-layout .content {
-    flex: 0 1 auto;
-}
-
 .content {
     flex: 0 1 auto;
 }
@@ -147,7 +142,7 @@ body {
     clear: both;
 }
 
-.chapter .content {
+.chapter .chapter-content {
     padding: 0.5em;
 }
 
@@ -237,10 +232,10 @@ body {
     position: relative;
 }
 
+/*
 line {
     stroke: red;
-    z-index: 50;
-}
+}*/
 
 /* graph info */
 .info {
@@ -254,8 +249,20 @@ line {
     overflow: auto;
     box-sizing: border-box;
     padding: 0.3em;
+    font-family: 'Handlee', cursive;
 }
 
 .clear {
     clear: both;
+}
+
+.space-tab {
+    width: 2em;
+    height: 1em;
+    float: left;
+}
+
+/* page */
+.page {
+    width: 100%;
 }

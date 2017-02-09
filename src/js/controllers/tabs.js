@@ -1,7 +1,9 @@
 var events = require('../services/events');
 var templates = require('../services/templates');
+
 var Editor = require('./editor');
 var Run = require('./run');
+var Settings = require('./settings');
 
 function Tabs (el) {
     this.el = el;
@@ -22,16 +24,36 @@ function Group (name, tabs) {
 
 Group.prototype.init = function () {
     var self = this;
+    
+    // Set widget chooser
+    var container = document.createElement("div");
+    container.style.width = '100%';
+    container.setAttribute("rv-show", "showWidgetsList");
+
+    templates.load(container, "./templates/select_widget.html", this).then(function () {
+        document.getElementById("rz-tabs-content").appendChild(container);
+    });
+    
     this.hover = function () {
-        if (self.tabs.active === self) {
+        /*if (self.tabs.active === self) {
             console.log("ACTIVE");
         }
         console.log("HOVER: " + self.name);
+        for (var i=0; i<self.widgets.length; i++) {
+            console.log(self.widgets[i].name);
+        }*/
+        self.tabs.active.active.show = false;
+        for (var i=0; self.tabs.groups.length; i++) {
+            self.tabs.groups[i].showWidgetsList = false;
+        }
+        self.showWidgetsList = true;
     };
     
     this.click = function () {
         self.active.show = true;
-        self.tabs.select(self); 
+        self.tabs.active.active.show = false;
+        self.showWidgetsList = false;
+        self.tabs.select(self);
     };
 };
 
@@ -43,7 +65,12 @@ Group.prototype.setItem = function (data, Widget) {
     );
     
     if (!widget) {
-        widget = new Widget(data, document.getElementById("rz-tabs-content"));
+        var container = document.createElement("div");
+        container.style.width = '100%';
+        container.setAttribute("rv-show", "show");
+        document.getElementById("rz-tabs-content").appendChild(container);
+        
+        widget = new Widget(data, container);
         this.widgets.push(widget);
     }
     
@@ -92,6 +119,13 @@ Tabs.prototype.init = function () {
         
         runs.setItem(data, Run);
         self.select(runs);
+    });
+
+    events.on("settings", function (data) {
+        var settings = self.group("settings");
+        
+        settings.setItem(data, Settings);
+        self.select(settings);
     });
   
     templates.load("rz-workarea", "./templates/tabs.html", this);

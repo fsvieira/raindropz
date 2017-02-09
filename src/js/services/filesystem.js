@@ -16,11 +16,10 @@ var localStorageFileTable = config.localstoragePrefix + "filetable";
 var localStorageFile = config.localstoragePrefix + "file$";
 
 /* Delete everything */
-/*
+
 localStorage.removeItem(localStorageFileTable);
 localStorage.removeItem(localStorageFile + 1);
 localStorage.removeItem(localStorageFile + 2);
-*/
 
 function saveFileTable () {
     localStorage.setItem(localStorageFileTable, JSON.stringify(cache.filetable));
