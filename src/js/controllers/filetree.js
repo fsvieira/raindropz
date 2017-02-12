@@ -27,20 +27,6 @@ function fileicon (file) {
 }
 
 function showSettings (ev) {
-	/*if (this.file.childs) {
-		templates.load(
-			"rz-work-area", 
-			"./templates/directory_settings.html",
-			this.file
-		);
-	}
-	else {
-		templates.load(
-			"rz-work-area", 
-			"./templates/file_settings.html",
-			this.file
-		);
-	}*/
 	ev.stopPropagation();
 	events.trigger("settings", this.file);
 }

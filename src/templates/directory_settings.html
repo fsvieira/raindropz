@@ -14,12 +14,14 @@
                 <div class='title'>
                     Create
                 </div>
-                <div class='content form'>
-                    <div>
-                        <input type='text' placeholder='New Directory'/><div class='button'>Create Directory</div>
+                <div class='section-content form'>
+                    <div class='field horizontal-layout'>
+                        <input type='text' placeholder='New Directory' class='fill' rv-value="inputs.directory" />
+                        <div rv-on-click='createDirectory' class='button content'>Create Directory</div>
                     </div>
-                    <div>
-                        <input type='text' placeholder='New File'/><div class='button'>Create File</div>
+                    <div class='field horizontal-layout'>
+                        <input type='text' placeholder='New File' class='fill' rv-value="inputs.file" />
+                        <div rv-on-click='createFile' class='button content'>Create File</div>
                     </div>
                 </div>
             </div>
@@ -29,7 +31,7 @@
                     Destroy
                 </div>
                 <div class='section-content'>
-                    <button>Delete</button>    
+                    <button rv-on-click='removeDirectory' >Delete</button>    
                 </div>
             </div>
 

@@ -160,11 +160,22 @@ body {
     margin-bottom: 0.5em;
 }
 
+.form {
+    padding: 1em;
+}
+
+.form .field {
+    margin: 1em;
+    height: 2em;
+    width: 100%;
+}
+
 .form input {
     font-family: 'Handlee', cursive;
     padding: 0.3em;
     width: 10em;
     max-width: 50%;
+    margin-right: 0.5em;
 }
 
 .form .button {
@@ -173,7 +184,7 @@ body {
     padding: 0.3em;
     font-family: 'Architects Daughter', cursive;
     background-color: #43b3c9;
-    float: left;
+    float: right;
     margin: 0.1em;
     border-radius: 0.5em;
     text-align: center;

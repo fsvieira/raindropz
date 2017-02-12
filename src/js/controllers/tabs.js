@@ -24,6 +24,7 @@ function Group (name, tabs) {
 
 Group.prototype.init = function () {
     var self = this;
+    var isHover = false;
     
     // Set widget chooser
     var container = document.createElement("div");
@@ -35,18 +36,18 @@ Group.prototype.init = function () {
     });
     
     this.hover = function () {
-        /*if (self.tabs.active === self) {
-            console.log("ACTIVE");
+        if (!isHover && self.widgets.length > 1) {
+            isHover = true;
+            self.tabs.active.active.show = false;
+            for (var i=0; i < self.tabs.groups.length; i++) {
+                self.tabs.groups[i].showWidgetsList = false;
+            }
+            self.showWidgetsList = true;
         }
-        console.log("HOVER: " + self.name);
-        for (var i=0; i<self.widgets.length; i++) {
-            console.log(self.widgets[i].name);
-        }*/
-        self.tabs.active.active.show = false;
-        for (var i=0; self.tabs.groups.length; i++) {
-            self.tabs.groups[i].showWidgetsList = false;
-        }
-        self.showWidgetsList = true;
+    };
+    
+    this.leave = function () {
+        isHover = false;
     };
     
     this.click = function () {

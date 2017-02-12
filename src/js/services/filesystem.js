@@ -15,12 +15,6 @@ var cache = {};
 var localStorageFileTable = config.localstoragePrefix + "filetable";
 var localStorageFile = config.localstoragePrefix + "file$";
 
-/* Delete everything */
-
-localStorage.removeItem(localStorageFileTable);
-localStorage.removeItem(localStorageFile + 1);
-localStorage.removeItem(localStorageFile + 2);
-
 function saveFileTable () {
     localStorage.setItem(localStorageFileTable, JSON.stringify(cache.filetable));
 }
@@ -29,6 +23,35 @@ function saveFile (id, data) {
     return new Promise(function (resolve, reject) {
         localStorage.setItem(localStorageFile + id, data);
         resolve(id);
+    });
+}
+
+function removeRecursive (filetable, id) {
+    var record = filetable.records[id];
+    delete filetable.records[id];
+    
+    if (record.type === types.DIRECTORY) {
+        for (var i=0; i<record.childs.length; i++) {
+            removeRecursive(filetable, record.childs[i]);
+        }
+    }
+    else {
+        // remove file,
+        localStorage.removeItem(localStorageFile + id);
+    }
+}
+
+function remove (id) {
+    return getFileTable().then(function (filetable) {
+        var record = filetable.records[id];
+        var childs = filetable.records[record.parentID].childs;
+        
+        childs.splice(childs.indexOf(id), 1);
+        
+        removeRecursive(filetable, id);
+        saveFileTable();
+        
+        return record.parentID;
     });
 }
 
@@ -65,7 +88,7 @@ function getFileTable () {
 
 function create (name, options) {
     return getFileTable().then(function (filetable, root) {
-        var parent = options.parent || filetable.records[filetable.root];
+        var parent = options.parent || filetable.records[options.parentID] || filetable.records[filetable.root];
         var id, r;
 
         for (var i=0; i<parent.childs.length; i++) {
@@ -89,7 +112,8 @@ function create (name, options) {
         filetable.records[id] = r = {
             id: id,
             name: name,
-            type: options.type
+            type: options.type,
+            parentID: parent.id
         };
         
         if (options.type === types.DIRECTORY) {
@@ -164,6 +188,7 @@ module.exports = {
     ls: ls,
     types: types,
     write: saveFile,
-    attributes: attributes
+    attributes: attributes,
+    remove: remove
 };
 
