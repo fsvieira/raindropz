@@ -277,3 +277,27 @@ line {
 .page {
     width: 100%;
 }
+
+
+/* Widget explorer*/
+
+.widget-explorer {
+    padding: 1em;
+}
+
+.widget-select {
+    background-color: #6b4e2e;
+    padding: 0.2em;
+    padding-right: 0.5em;
+    padding-left: 0.5em;
+    border-radius: 1em;
+    display: inline-block;
+    float: left;
+    margin: 0.2em;
+    color: #f7c35e;
+}
+
+.widget-select:hover {
+    color: #6b4e2e;
+    background-color: #f7c35e;
+}

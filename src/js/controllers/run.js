@@ -71,7 +71,7 @@ function prepare (data) {
         var parentBranch;
         
         branch.metadata.id = b;
-        
+
         if (parent) {
             if (typeof parent === 'string') {
                 parentBranch = data.branchs[parent];
@@ -161,10 +161,15 @@ Run.prototype.init = function (el) {
                     .attr("cy", branch.metadata.geometry.position.y)
                     .attr("r", branch.metadata.geometry.position.r);
                 
+                if (branch.metadata.fail) {
+                    circle.attr("fill", "red");
+                }
+                
                 branch.metadata.geometry.node = circle;    
                     
                 circle.on("click",
                     function () {
+                        console.log("Click!!");
                         self.info = {
                             prettyHTML: this.branch.metadata.prettyHTML
                         };

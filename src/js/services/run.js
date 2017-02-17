@@ -1,6 +1,6 @@
 var filesystem = require("./filesystem");
-var Z = require("../lib/z");
-var utils = require("../lib/utils");
+var Z = require("zebrajs/lib3/z");
+var utils = require("zebrajs/lib3/utils");
 
 function injectLinesString (iStr, str) {
     if (str === '') {
@@ -29,7 +29,8 @@ function printQuery (zvs, branch) {
 }
 
 function setupMetadata (zvs, branch, b) {
-    var b = b || zvs.objects.branchs[branch];
+    b = b || zvs.objects.branchs[branch];
+    var p, q;
     
     switch (b.data.action) {
         case 'init':
@@ -56,15 +57,14 @@ function setupMetadata (zvs, branch, b) {
             break;
             
         case 'unify':
-            var p = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[0], b.data.parent), true));
-            var q = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[1], b.data.parent), true));
+            p = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[0], b.data.parent), true));
+            q = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[1], b.data.parent), true));
             
             b.metadata.prettyText = b.data.action + '(\n' + p + ',\n'+ q + '\n)\n => \n' + printQuery(zvs, branch);
             
             break;
         
         case '_merge':
-            console.log("_merge");
             var bQueries = '';
             for (var i=0; i<b.data.parent.length; i++) {
                 bQueries += printQuery(zvs, b.data.parent[i]) + '\n';
@@ -74,7 +74,15 @@ function setupMetadata (zvs, branch, b) {
             
             b.metadata.prettyText = b.data.action +'(\n' + bQueries +  '\n)\n => \n' + printQuery(zvs, branch);
             break; 
-            
+        
+        case 'queryNegation':
+            /*
+            p = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[0], b.data.parent), true));
+            b.metadata.prettyText = b.data.action + '(\n' + p + '\n)\n => \n' + printQuery(zvs, branch);
+            break;
+            */
+            /*console.log(JSON.stringify(b, null, '\t'));
+            console.log(utils.toString(zvs.getObject(b.data.args[0], branch), true));*/
         default:
             b.metadata.prettyText = b.data.action;
     }

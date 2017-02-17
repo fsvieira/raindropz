@@ -58,8 +58,10 @@ Group.prototype.init = function () {
     };
 };
 
-Group.prototype.setItem = function (data, Widget) {
-    var widget = this.widgets.find(
+Group.prototype.setItem = function (data, Widget, widget) {
+    var self = this;
+    
+    widget = widget || this.widgets.find(
         function (a) {
             return a.id === data.id;
         }
@@ -73,6 +75,14 @@ Group.prototype.setItem = function (data, Widget) {
         
         widget = new Widget(data, container);
         this.widgets.push(widget);
+        
+        widget.open = function () {
+            self.setItem(undefined, undefined, widget);
+            self.active.show = true;
+            self.tabs.active.active.show = false;
+            self.showWidgetsList = false;
+            self.tabs.select(self);
+        };
     }
     
     if (this.active) {
