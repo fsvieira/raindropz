@@ -75,14 +75,14 @@ function setupMetadata (zvs, branch, b) {
             b.metadata.prettyText = b.data.action +'(\n' + bQueries +  '\n)\n => \n' + printQuery(zvs, branch);
             break; 
         
-        case 'queryNegation':
-            /*
+        case 'mergeConflictHandler':
             p = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[0], b.data.parent), true));
-            b.metadata.prettyText = b.data.action + '(\n' + p + '\n)\n => \n' + printQuery(zvs, branch);
+            q = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[1], b.data.parent), true));
+            
+            b.metadata.prettyText = b.data.action + '(\n' + p + ',\n'+ q + '\n)\n => \n' + printQuery(zvs, branch);
+            
             break;
-            */
-            /*console.log(JSON.stringify(b, null, '\t'));
-            console.log(utils.toString(zvs.getObject(b.data.args[0], branch), true));*/
+
         default:
             b.metadata.prettyText = b.data.action;
     }
@@ -98,7 +98,7 @@ function run (id) {
         return filesystem.attributes(id).then(function (attr) {
             attr.data = data;
             
-            var z = new Z();
+            var z = new Z(20); // Limit run max deep
             z.add(data);
 
             for (var branch in z.zvs.objects.branchs) {

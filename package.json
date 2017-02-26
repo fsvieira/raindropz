@@ -22,6 +22,6 @@
     "promise-polyfill": "^6.0.2",
     "rivets": "^0.9.6",
     "whatwg-fetch": "^2.0.1",
-    "zebrajs": "0.0.3"
+    "zebrajs": "0.0.11"
   }
 }

@@ -97,19 +97,27 @@ function prepare (data) {
     var levels = setLevels(data);
     // setup coordinates,
     var levelsMargin = 1 / (levels +1);
+    
+    var yRadius = levelsMargin * 0.1;
+
 
     for (var i in data.levels) {
         var branches = data.levels[i];
         i = +i;
+
+        var xMargin = (1/(branches.length+1));
+        var xRadius = xMargin * 0.25;
+
+        var r = xRadius < yRadius?xRadius:yRadius;
 
         for (var j=0; j<branches.length; j++) {
             branch = data.branchs[branches[j]];
 
             branch.metadata.geometry = {
                 position: {
-                    x: (1/(branches.length+1)) * (j+1),
+                    x: xMargin * (j+1),
                     y: levelsMargin * (i+1),
-                    r: levelsMargin * 0.1
+                    r: r// levelsMargin * 0.05
                 }
             };
         }
@@ -161,7 +169,7 @@ Run.prototype.init = function (el) {
                     .attr("cy", branch.metadata.geometry.position.y)
                     .attr("r", branch.metadata.geometry.position.r);
                 
-                if (branch.metadata.fail) {
+                if (branch.metadata.notes && branch.metadata.notes.status && branch.metadata.notes.status.fail) {
                     circle.attr("fill", "red");
                 }
                 
@@ -169,7 +177,6 @@ Run.prototype.init = function (el) {
                     
                 circle.on("click",
                     function () {
-                        console.log("Click!!");
                         self.info = {
                             prettyHTML: this.branch.metadata.prettyHTML
                         };
