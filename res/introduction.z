@@ -1,0 +1,7 @@
+(number 0)
+(number 1)
+(set)
+(set (number 'a) (set) ')
+(set (number 'a) (set (number 'b) 'tail ') (set (number 'a) 'tail ') ^(equal (number 'a) (number 'b)))
+(equal 'x 'x)
+?(set (number 'a) 'tail ')
