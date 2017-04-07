@@ -1,6 +1,6 @@
 var filesystem = require("./filesystem");
-var Z = require("zebrajs/lib3/z");
-var utils = require("zebrajs/lib3/utils");
+var Z = require("zebrajs/lib/z");
+var utils = require("zebrajs/lib/utils");
 
 function injectLinesString (iStr, str) {
     if (str === '') {
@@ -15,14 +15,11 @@ function injectLinesString (iStr, str) {
 
 function printQuery (zvs, branch) {
     // Get globals
-    var globalsHash = zvs.add({
-        type: "globals"
-    });
+    var query = zvs.global("query");
+    var q = zvs.getObject(query, branch);
     
-    var q = zvs.getObject(globalsHash, branch).query;
-
     if (q) {
-        q = utils.toString(q, true);
+        q = utils.toString(q, true) + "::" + branch + "("+ query +")";
     }
     
     return q;
@@ -31,6 +28,8 @@ function printQuery (zvs, branch) {
 function setupMetadata (zvs, branch, b) {
     b = b || zvs.objects.branchs[branch];
     var p, q;
+
+    console.log(JSON.stringify(b));
     
     switch (b.data.action) {
         case 'init':
@@ -39,20 +38,18 @@ function setupMetadata (zvs, branch, b) {
         
         case 'definitions':
             var definitions = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[0], b.data.parent), true));
-            var globals1 = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[1], b.data.parent).definitions, true));
-            var globals2 = injectLinesString('\t', utils.toString(zvs.getObject(b.metadata.changes[b.data.args[1]], branch).definitions, true));
+            var globals1 = injectLinesString('\t', utils.toString(zvs.getObject(zvs.global("definitions"), b.data.parent).definitions, true));
+            var globals2 = injectLinesString('\t', utils.toString(zvs.getObject(zvs.global("definitions"), branch).definitions, true));
             
             b.metadata.prettyText = 'Definitions: \n'
                 + definitions + '\n\n'
                 + 'Global Definitions: \n' + globals1 + '\n => \n' + globals2 + ';\n'
             ;
+            
             break;
 
         case 'query':
-            var query = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[0], b.data.parent), true)) + ' : Query';
-            var globals = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[1], b.data.parent).definitions, true)) + ' : Definitions';
-            
-            b.metadata.prettyText = b.data.action + '(\n' + query + ',\n'+ globals + '\n)\n => \n' + printQuery(zvs, branch);
+            b.metadata.prettyText = 'Query:\n\t' + printQuery(zvs, b.data.parent) + "\n=>\n\t" + printQuery(zvs, branch);
             
             break;
             
@@ -86,6 +83,10 @@ function setupMetadata (zvs, branch, b) {
         default:
             b.metadata.prettyText = b.data.action;
     }
+  
+    b.metadata.prettyText += 
+        "\n\n== Branch ID ==\n" + branch +
+        "\n\n== Branch Info ==\n" + JSON.stringify(b.data, null, '\t');
 }
 
 function text2html (text) {
