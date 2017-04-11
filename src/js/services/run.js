@@ -29,8 +29,6 @@ function setupMetadata (zvs, branch, b) {
     b = b || zvs.objects.branchs[branch];
     var p, q;
 
-    console.log(JSON.stringify(b));
-    
     switch (b.data.action) {
         case 'init':
             b.metadata.prettyText = 'init;';
@@ -79,14 +77,21 @@ function setupMetadata (zvs, branch, b) {
             b.metadata.prettyText = b.data.action + '(\n' + p + ',\n'+ q + '\n)\n => \n' + printQuery(zvs, branch);
             
             break;
-
+            
+        case 'negations':
+            p = injectLinesString('\t', utils.toString(zvs.getObject(b.data.args[0], b.data.parent), true));
+            b.metadata.prettyText = b.data.action + '(\n' + p + '\n)\n => \n' + printQuery(zvs, branch);
+            break;
+            
         default:
             b.metadata.prettyText = b.data.action;
     }
   
     b.metadata.prettyText += 
         "\n\n== Branch ID ==\n" + branch +
-        "\n\n== Branch Info ==\n" + JSON.stringify(b.data, null, '\t');
+        "\n\n== Branch Info ==\n" + JSON.stringify(b.data, null, '\t') +
+        "\n\n== Branch Notes ==\n" + JSON.stringify(b.metadata.notes, null, '\t')
+    ;
 }
 
 function text2html (text) {
@@ -99,7 +104,7 @@ function run (id) {
         return filesystem.attributes(id).then(function (attr) {
             attr.data = data;
             
-            var z = new Z(20); // Limit run max deep
+            var z = new Z(20); // Limit run max deep Z(20)
             z.add(data);
 
             for (var branch in z.zvs.objects.branchs) {
