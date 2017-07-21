@@ -48,10 +48,13 @@ Editor.prototype.init = function (el) {
     
     this.run = function (el) {
         return save().then(function (id) {
+            /*
             return run.run(id).then(function (result) {
                 events.trigger("run", result);
                 return result;
-            });
+            });*/
+            events.trigger("run", self.file);
+            return self.file;
         });
     };
     

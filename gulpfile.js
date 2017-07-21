@@ -12,7 +12,16 @@ var buffer = require('vinyl-buffer');
 
 var BUILD_DEST = './www';
 
-gulp.task('browserify', function () {
+gulp.task('zworker', function () {
+  return browserify(['src/js/services/z/zworker.js'])
+  .transform(babelify)
+  .bundle()
+  .pipe(source('zworker.js'))
+  .pipe(gulp.dest(path.join(BUILD_DEST, 'js')))
+  .pipe(buffer());
+});
+
+gulp.task('browserify', ['zworker'], function () {
   return browserify(['src/js/main.js'])
   .transform(babelify)
   .bundle()
@@ -59,7 +68,8 @@ gulp.task('dist', ['build'], function () {
 gulp.task('build', ['minify-html', 'minify-css', 'browserify'], function () {
   return gulp.src([
     'src/**/*',
-    '!src/**/*.{css,js,html}'
+    '!src/**/*.{css,js,html}',
+    '!src/js/**/*'
   ])
   .pipe(gulp.dest(BUILD_DEST));
 });
