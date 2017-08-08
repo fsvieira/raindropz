@@ -1,19 +1,33 @@
 var gulp = require('gulp');
-var browserify = require('gulp-browserify');
+var browserify = require('browserify');
 var cleanCSS = require('gulp-clean-css');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var path = require('path');
 var htmlmin = require('gulp-htmlmin');
-var babel = require("gulp-babel");
+var babelify = require("babelify");
+
+var source = require('vinyl-source-stream');
+var buffer = require('vinyl-buffer');
 
 var BUILD_DEST = './www';
 
-gulp.task('browserify', function () {
-  return gulp.src('src/js/main.js')
-    .pipe(browserify())
-    .pipe(babel())
-    .pipe(gulp.dest(path.join(BUILD_DEST, 'js')));
+gulp.task('zworker', function () {
+  return browserify(['src/js/services/z/zworker.js'])
+  .transform(babelify)
+  .bundle()
+  .pipe(source('zworker.js'))
+  .pipe(gulp.dest(path.join(BUILD_DEST, 'js')))
+  .pipe(buffer());
+});
+
+gulp.task('browserify', ['zworker'], function () {
+  return browserify(['src/js/main.js'])
+  .transform(babelify)
+  .bundle()
+  .pipe(source('bundle.js'))
+  .pipe(gulp.dest(path.join(BUILD_DEST, 'js')))
+  .pipe(buffer());
 });
 
 gulp.task('resources-css', function () {
@@ -41,9 +55,12 @@ gulp.task('minify-html', function() {
 });
 
 gulp.task('dist', ['build'], function () {
-  return gulp.src('src/js/main.js')
-    .pipe(browserify())
-    .pipe(babel())
+  return browserify(['src/js/main.js'])
+    .transform(babelify)
+    .bundle()
+    .pipe(source('bundle.js'))
+    .pipe(gulp.dest(path.join(BUILD_DEST, 'js')))
+    .pipe(buffer())
     .pipe(uglify())
     .pipe(gulp.dest(path.join(BUILD_DEST, 'js')));
 });
@@ -51,7 +68,8 @@ gulp.task('dist', ['build'], function () {
 gulp.task('build', ['minify-html', 'minify-css', 'browserify'], function () {
   return gulp.src([
     'src/**/*',
-    '!src/**/*.{css,js,html}'
+    '!src/**/*.{css,js,html}',
+    '!src/js/**/*'
   ])
   .pipe(gulp.dest(BUILD_DEST));
 });

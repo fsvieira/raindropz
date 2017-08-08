@@ -159,9 +159,7 @@ function ls (id) {
                 );
 
                 delete r.childs;
-                
-                console.log(JSON.stringify(r));
-                
+
                 list.push(r);
             }
         }

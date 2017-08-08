@@ -301,3 +301,16 @@ line {
     color: #6b4e2e;
     background-color: #f7c35e;
 }
+
+/* Info */
+.info .box {
+    padding: .5em 1em .5em 1em;
+    border: 1px solid #0099ff;
+    background-color: rgb(153, 204, 255);
+    background-color: rgba(153, 204, 255, 0.8);
+    color: #000;
+    width: 100%;
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+    box-sizing: border-box;
+}

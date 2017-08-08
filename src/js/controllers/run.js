@@ -1,210 +1,291 @@
 var templates = require("../services/templates");
 var d3 = require("d3");
+var getSession = require("../services/z/zsession");
 
-function Run (data, el) {
-    this.name = data.file.name;
-    this.icon = "typcn typcn-media-play";
-    this.id = data.file.id;
+class Run {
+    constructor (file, el) {
+        this.name = file.name;
+        this.icon = "typcn typcn-media-play";
+        this.id = file.id;
+        this.data = file;
 
-    this.data = data;
-    
-    this.init(el);
-}
+        const session = getSession(file.id);
+        session.add(file.id);
 
+        this.tree = {
+            data: {},
+            levels: {},
+            nodes: [],
+            links: []
+        };
 
-function setLevels (data, branch, level) {
-    var order = 0;
-    
-    data.levels = {};
-    
-    var maxLevel = 0;
-    
-    function _setLevels (data, branch, level) {
-        var b = data.branchs[branch];
+        this.init(el).then(() => {
+            // listen to other updates,
+            session.events.on('update', (tree) => {
+                if (session.tree.root && !this.tree.data[session.tree.root]) {
+                    this.addNode(session.tree.data[session.tree.root]);
+                }
 
-        if (b.metadata.level === undefined || b.metadata.level < level) {
-            b.metadata.level = level;
-        }
-        
-        if (b.metadata.order === undefined) {
-            b.metadata.order = order++;
-        }
-        
-        if (maxLevel < level) {
-            maxLevel = level; 
-        }
-    
-        if (b.metadata.childs) {
-            for (var i=0; i<b.metadata.childs.length; i++) {
-                _setLevels(data, b.metadata.childs[i], level+1);
+                this.draw(tree);
+            });
+            
+            if (session.tree.root) {
+                this.addNode(session.tree.data[session.tree.root]);
+                this.draw(session.tree);
             }
-        }
-    }
-    
-    _setLevels(data, data.root, 0);
-
-    for (var branch in data.branchs) {
-        var b = data.branchs[branch];
-        
-        data.levels[b.metadata.level] = data.levels[b.metadata.level] || [];
-        data.levels[b.metadata.level].push(branch);
-    }
-
-    for (var level in data.levels) {
-        var branches = data.levels[level];
-        
-        branches.sort(function (a, b) {
-            var branchA = data.branchs[a];
-            var branchB = data.branchs[b];
-
-            return branchA.metadata.order - branchB.metadata.order;
         });
     }
     
-    return maxLevel+1;
-}
-
-function prepare (data) {
-    for (var b in data.branchs) {
-        var branch = data.branchs[b];
-        var parent = branch.data.parent;
-        var parentBranch;
-        
-        branch.metadata.id = b;
-
-        if (parent) {
-            if (typeof parent === 'string') {
-                parentBranch = data.branchs[parent];
+    updateCoords () {
+        var maxLevel = 0;
+        var maxLevelNodes = 0;
                 
-                parentBranch.metadata.childs = parentBranch.metadata.childs || [];
-                if (parentBranch.metadata.childs.indexOf(b) === -1) {
-                    parentBranch.metadata.childs.push(b);
-                }
+        for (var i in this.tree.levels) {
+            const level = +i;
+            if (maxLevel < level) {
+                maxLevel = level;
             }
-            else {
-                for (var p=0; p<parent.length; p++) {
-                    parentBranch = data.branchs[parent[p]];
-                
-                    parentBranch.metadata.childs = parentBranch.metadata.childs || [];
-                    if (parentBranch.metadata.childs.indexOf(b) === -1) {
-                        parentBranch.metadata.childs.push(b);
-                    }
-                }
+                        
+            if (maxLevelNodes < this.tree.levels[i].length) {
+                maxLevelNodes = this.tree.levels[i].length;
             }
         }
-    }
+
+        const yh = 1 / (maxLevel + 1);
+        const ym = yh / 2;
+
+        const xw = 1 / (maxLevelNodes + 1);
+        const r = xw>yh?yh*0.1:xw*0.1;
+
+        this.tree.nodes.forEach((branch) => {
+            const branchesIds = this.tree.levels[branch.data.level];
+            const x = branchesIds.indexOf(branch.metadata.id);
     
-    var levels = setLevels(data);
-    // setup coordinates,
-    var levelsMargin = 1 / (levels +1);
-    
-    var yRadius = levelsMargin * 0.1;
-
-
-    for (var i in data.levels) {
-        var branches = data.levels[i];
-        i = +i;
-
-        var xMargin = (1/(branches.length+1));
-        var xRadius = xMargin * 0.25;
-
-        var r = xRadius < yRadius?xRadius:yRadius;
-
-        for (var j=0; j<branches.length; j++) {
-            branch = data.branchs[branches[j]];
+            const xw = 1 / branchesIds.length;
+            const xm = xw / 2;
 
             branch.metadata.geometry = {
-                position: {
-                    x: xMargin * (j+1),
-                    y: levelsMargin * (i+1),
-                    r: r// levelsMargin * 0.05
-                }
-            };
+                cx: xm + x * xw,
+                cy: ym + branch.data.level * yh,
+                r: r,
+                line: r*0.5
+            };    
+        });
+    }
+    
+    addNode (branch) {
+        const branchId = branch.metadata.id;
+        
+        if (!this.tree.data[branchId]) {
+            this.tree.data[branchId] = branch;
+            this.tree.nodes.push(branch);
+            this.tree.levels[branch.data.level] = this.tree.levels[branch.data.level] || [];
+            this.tree.levels[branch.data.level].push(branchId);
         }
+    }
+    
+    removeNode (branch) {
+        const branchId = branch.metadata.id;
+        
+        if (this.tree.data[branchId]) {
+            branch.metadata.expanded = false;
+            const l = this.tree.levels[branch.data.level];
+            delete this.tree.data[branchId];
+            l.splice(l.indexOf(branchId), 1);
+            
+            this.tree.nodes.splice(this.tree.nodes.indexOf(branch), 1);
+            
+            if (l.length === 0) {
+                delete this.tree.levels[branch.data.level];
+            }
+
+            for (var i=this.tree.links.length-1; i>=0; i--) {
+                const link = this.tree.links[i];
+                
+                if (link.parent === branch || link.child === branch) {
+                    this.tree.links.splice(i, 1);
+                }
+            }
+            
+            this.tree.nodes.filter((branch) => {
+                return branch.data.parent !== undefined && 
+                (branch.data.parent instanceof Array?branch.data.parent.indexOf(branchId) !== -1:branch.data.parent === branchId);
+            }).forEach((branch) => {this.removeNode(branch)});
+        }
+    }
+    
+    draw (sTree) {
+        this.updateCoords();
+        
+        function color (branch) {
+            const childs = sTree.childs[branch.metadata.id];
+            // TODO: check if branch fails,
+            if (childs) {
+                return "#0FCCDC";
+            }
+            else {
+                return "black";
+            }
+        }
+        
+        function dataTrack (d) {
+            if (d.metadata) {
+                return d.metadata.id;
+            }
+            else {
+                return d.parent.metadata.id + "_" + d.child.metadata.id;
+            }
+        }
+        
+        // remove,
+        this.elLinks
+            .selectAll("line")
+            .data(this.tree.links, dataTrack)
+            .exit()
+            .remove()
+            .transition()
+            .duration(750)
+            .delay(function(d, i) { return i * 10; });
+            
+        this.elNodes
+            .selectAll("circle")
+            .data(this.tree.nodes, dataTrack)
+            .exit()
+            .remove()
+            .transition()
+            .duration(750)
+            .delay(function(d, i) { return i * 10; });
+        
+        // update,
+        this.elLinks
+            .selectAll("line")
+            .data(this.tree.links, dataTrack)
+            .transition()
+            .duration(750)
+            .delay(function(d, i) { return i * 10; })
+            .attr("x1", function ({parent: branch}) {
+                return branch.metadata.geometry.cx;
+            })
+            .attr("y1", function ({parent: branch}) {
+                return branch.metadata.geometry.cy;
+            })
+            .attr("x2", function ({child: branch}) {
+                return branch.metadata.geometry.cx;
+            })
+            .attr("y2", function ({child: branch}) {
+                return branch.metadata.geometry.cy;
+            })
+            .attr("stroke-width", function ({parent: branch}) {
+                return branch.metadata.geometry.line;
+            });
+        
+        this.elNodes
+            .selectAll("circle")
+            .data(this.tree.nodes, dataTrack)
+            .transition()
+            .duration(750)
+            .delay(function(d, i) { return i * 10; })
+            .attr("cx", function (branch) {
+                return branch.metadata.geometry.cx;
+            })
+            .attr("cy", function (branch) {
+                return branch.metadata.geometry.cy;
+            })
+            .attr("r", function (branch) {
+                return branch.metadata.geometry.r;
+            })
+            .attr("fill", color);
+            
+        // add
+        this.elLinks
+            .selectAll("line")
+            .data(this.tree.links, dataTrack)
+            .enter()
+            .append("line")
+            .transition()
+            .duration(750)
+            .delay(function(d, i) { return i * 10; })
+            .attr("x1", function ({parent: branch}) {
+                return branch.metadata.geometry.cx;
+            })
+            .attr("y1", function ({parent: branch}) {
+                return branch.metadata.geometry.cy;
+            })
+            .attr("x2", function ({child: branch}) {
+                return branch.metadata.geometry.cx;
+            })
+            .attr("y2", function ({child: branch}) {
+                return branch.metadata.geometry.cy;
+            })
+            .attr("stroke-width", function ({parent: branch}) {
+                return branch.metadata.geometry.line;
+            })
+            .attr("stroke", "black")
+            .attr("class", "link");
+            
+        this.elNodes
+            .selectAll("circle")
+            .data(this.tree.nodes, dataTrack)
+            .enter()
+            .append("circle")
+            .on('click', (branch) => {
+                // check if branch has children,
+                const childs = sTree.childs[branch.metadata.id];
+
+                if (branch.metadata.expanded) {
+                    branch.metadata.expanded = false;
+                    childs.forEach((child) => {
+                        this.removeNode(child);
+                    });
+                    
+                    this.draw(sTree);
+                }
+                else if (childs) {
+                    branch.metadata.expanded = true;
+
+                    childs.forEach((child) => {
+                        this.addNode(child);
+                        this.tree.links.push({parent: branch, child});
+                    });
+
+                    this.draw(sTree);
+                }
+                
+                this.info = {
+                    prettyHTML: branch.metadata.prettyHTML
+                };
+            })
+            .transition()
+            .duration(750)
+            .delay(function(d, i) { return i * 10; })
+            .attr("cx", function (branch) {
+                return branch.metadata.geometry.cx;
+            })
+            .attr("cy", function (branch) {
+                return branch.metadata.geometry.cy;
+            })
+            .attr("r", function (branch) {
+                return branch.metadata.geometry.r;
+            })
+            .attr("fill", color);
+    }
+    
+    init (el) {
+        return templates.load(el, "./templates/run.html", this).then(
+            () => {
+                this.elLinks = d3.select(el).select(".run-tree")
+                    .append("g");
+                    
+                this.elNodes = d3.select(el).select(".run-tree")
+                    .call(d3.zoom().on("zoom", () => {
+                        this.elLinks.attr("transform", d3.event.transform);
+                        this.elNodes.attr("transform", d3.event.transform);
+                    }))
+                    .append("g");
+            }
+        );
     }
 }
 
-
-
-Run.prototype.init = function (el) {
-    var self = this;
-
-    templates.load(el, "./templates/run.html", this).then(
-        function () {
-            prepare(self.data.run);
-
-            var tree = d3.select(el).select(".run-tree")
-                .call(d3.zoom().on("zoom", function () {
-                    tree.attr("transform", d3.event.transform);
-                }))
-                .append("g");
-            
-            var selectedBranch;
-
-            for (var b in self.data.run.branchs) {
-                var branch = self.data.run.branchs[b];
-
-                if (branch.metadata.childs) {
-                    for (var i=0; i<branch.metadata.childs.length; i++) {
-                        var childBranch = self.data.run.branchs[branch.metadata.childs[i]];
-                        
-                        var line = tree.append("line")
-                            .attr("x1", branch.metadata.geometry.position.x)
-                            .attr("y1", branch.metadata.geometry.position.y)
-                            .attr("x2", childBranch.metadata.geometry.position.x)
-                            .attr("y2", childBranch.metadata.geometry.position.y)
-                            .attr("stroke-width", 0.001)
-                            .attr("stroke", "red");
-                            
-                        branch.metadata.geometry.links = branch.metadata.geometry.links || [];
-                        childBranch.metadata.geometry.links = childBranch.metadata.geometry.links || [];
-
-                        branch.metadata.geometry.links.push({line: line, branch: childBranch});
-                        childBranch.metadata.geometry.links.push({line: line, branch: branch});
-                    }
-                }
-                
-                var circle = tree.append("circle")
-                    .attr("cx", branch.metadata.geometry.position.x)
-                    .attr("cy", branch.metadata.geometry.position.y)
-                    .attr("r", branch.metadata.geometry.position.r);
-                
-                if (branch.metadata.notes && branch.metadata.notes.status && branch.metadata.notes.status.fail) {
-                    circle.attr("fill", "red");
-                }
-                
-                branch.metadata.geometry.node = circle;    
-                    
-                circle.on("click",
-                    function () {
-                        self.info = {
-                            prettyHTML: this.branch.metadata.prettyHTML
-                        };
-                        
-                        if (selectedBranch) {
-                            selectedBranch.metadata.geometry.node.style("fill", "blue");
-                            
-                            selectedBranch.metadata.geometry.links.forEach(function (link) {
-                                link.line.attr("stroke", "red");
-                                link.branch.metadata.geometry.node.attr("fill", "orange");
-                            });
-                        }
-                        
-                        this.node.style("fill", "lime");
-                        selectedBranch = this.branch;
-                            
-                        this.branch.metadata.geometry.links.forEach(function (link) {
-                            link.line.attr("stroke", "green");
-                            link.branch.metadata.geometry.node.attr("fill", "green");
-                        });
-                    }.bind({
-                        branch: branch, 
-                        node: circle
-                    })
-                );
-            }
-        }
-    );
-};
 
 module.exports = Run;

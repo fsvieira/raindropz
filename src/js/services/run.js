@@ -1,5 +1,5 @@
 var filesystem = require("./filesystem");
-var Z = require("zebrajs/lib/z");
+var Session = require("zebrajs");
 var utils = require("zebrajs/lib/utils");
 
 function injectLinesString (iStr, str) {
@@ -100,6 +100,36 @@ function text2html (text) {
 
 function run (id) {
     // get data from file.
+    const session = new Session({
+        readFile: function (filename) {
+            return filesystem.open(id).then(function (data) {
+                return data;
+            });
+        },
+        settings: {
+            depth: 20
+        }
+    });
+    
+    session.events.on('query-start', function (queryBranchId) {
+        console.log(queryBranchId);
+    });
+    
+    return new Promise(function (resolve, reject) {
+        session.events.on('halt', function () {
+            filesystem.attributes(id).then(function (attr) {
+                console.log(JSON.stringify(attr));
+                resolve({
+                    run: session.zvs,
+                    file: attr
+                });
+            });
+        });
+        
+        session.add({value: '[' + id + ']'});
+    });
+    
+    /*
     return filesystem.open(id).then(function (data) {
         return filesystem.attributes(id).then(function (attr) {
             attr.data = data;
@@ -119,7 +149,7 @@ function run (id) {
                 run: z.zvs.objects
             };
         });
-    });
+    });*/
 }
 
 
