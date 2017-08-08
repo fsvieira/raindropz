@@ -12,8 +12,10 @@ class Session {
                 case 'readfile':
                     self.readFile(data);
                     break;
-                case 'branch':
-                    self.branch(data);
+
+                case 'branches':
+                    data.forEach(branch => self.branch(branch));
+                    
                     break;
             }
         };
@@ -54,15 +56,14 @@ class Session {
         );
     }
     
-    branch ({branchId, branch}) {
+    branch (branch) {
+        const branchId = branch.metadata.id;
+        
         if (!this.tree[branchId]) {
             this.tree.data[branchId] = branch;
             this.tree.stats.maxLevel = this.tree.stats.maxLevel<branch.data.level?branch.data.level:this.tree.stats.maxLevel;
             branch.metadata.id = branchId;
             
-            // TODO: make it more pretty,
-            // branch.metadata.prettyHTML = branchId;
-
             if (branch.data.parent) {
                 if (branch.data.parent instanceof Array) {
                     branch.data.parent.forEach((parentId) => {

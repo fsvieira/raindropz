@@ -21,7 +21,6 @@ class Session {
         const session = new ZSession({
             readFile: function (filename) {
                 return filesystem.open(id).then(function (data) {
-                    console.log("DATA: " + JSON.stringify(data));
                     return data;
                 });
             },

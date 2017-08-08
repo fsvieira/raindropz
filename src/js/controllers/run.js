@@ -9,7 +9,6 @@ class Run {
         this.id = file.id;
         this.data = file;
 
-        console.log("get session");
         const session = getSession(file.id);
         session.add(file.id);
 
@@ -230,13 +229,11 @@ class Run {
             .enter()
             .append("circle")
             .on('click', (branch) => {
-                console.log("CLICK");
                 // check if branch has children,
                 const childs = sTree.childs[branch.metadata.id];
 
                 if (branch.metadata.expanded) {
                     branch.metadata.expanded = false;
-                    console.log("remove");
                     childs.forEach((child) => {
                         this.removeNode(child);
                     });
@@ -244,7 +241,6 @@ class Run {
                     this.draw(sTree);
                 }
                 else if (childs) {
-                    console.log("add");
                     branch.metadata.expanded = true;
 
                     childs.forEach((child) => {

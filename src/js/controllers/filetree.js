@@ -101,7 +101,6 @@ function setup () {
 			if (response.status === 200) {
 				response.text().then(
 					function (data) {
-						console.log(data);
 						return filesystem.create(
 					     	"introduction.z", 
 					     	{

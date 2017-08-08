@@ -103,7 +103,6 @@ function run (id) {
     const session = new Session({
         readFile: function (filename) {
             return filesystem.open(id).then(function (data) {
-                console.log(JSON.stringify(data));
                 return data;
             });
         },
@@ -118,7 +117,6 @@ function run (id) {
     
     return new Promise(function (resolve, reject) {
         session.events.on('halt', function () {
-            console.log("halt");
             filesystem.attributes(id).then(function (attr) {
                 console.log(JSON.stringify(attr));
                 resolve({
