@@ -120,6 +120,15 @@ class Run {
         function color (branch) {
             const childs = sTree.childs[branch.metadata.id];
             // TODO: check if branch fails,
+            if (branch.metadata.status) {
+                if (branch.metadata.status.fail) {
+                    return "#FF0000";
+                }
+                else if (branch.metadata.status.end) {
+                    return "#00FF00";
+                }
+            }
+            
             if (childs) {
                 return "#0FCCDC";
             }

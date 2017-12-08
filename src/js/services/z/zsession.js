@@ -57,35 +57,31 @@ class Session {
     }
     
     branch (branch) {
+        // assume that there is no duplicated branches, zworker will take care of that.
         const branchId = branch.metadata.id;
         
-        if (!this.tree[branchId]) {
-            this.tree.data[branchId] = branch;
-            this.tree.stats.maxLevel = this.tree.stats.maxLevel<branch.data.level?branch.data.level:this.tree.stats.maxLevel;
-            branch.metadata.id = branchId;
+        this.tree.data[branchId] = branch;
+        this.tree.stats.maxLevel = this.tree.stats.maxLevel<branch.data.level?branch.data.level:this.tree.stats.maxLevel;
+        branch.metadata.id = branchId;
             
-            if (branch.data.parent) {
-                if (branch.data.parent instanceof Array) {
-                    branch.data.parent.forEach((parentId) => {
-                        this.tree.childs[parentId] = this.tree.childs[parentId] || [];
-                        this.tree.childs[parentId].push(branch);
-                    });
-                }
-                else {
-                    const parentId = branch.data.parent;
+        if (branch.data.parent) {
+            if (branch.data.parent instanceof Array) {
+                branch.data.parent.forEach((parentId) => {
                     this.tree.childs[parentId] = this.tree.childs[parentId] || [];
                     this.tree.childs[parentId].push(branch);
-                }
+                });
             }
             else {
-                this.tree.root = branchId;
+                const parentId = branch.data.parent;
+                this.tree.childs[parentId] = this.tree.childs[parentId] || [];
+                this.tree.childs[parentId].push(branch);
             }
-
-            this.events.trigger('update', this.tree);
         }
         else {
-            console.log("DUPLICATED ID: " + branchId);
+            this.tree.root = branchId;
         }
+
+        this.events.trigger('update', this.tree);
     }
 }
 

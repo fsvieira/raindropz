@@ -2,6 +2,12 @@ const Z = require("zebrajs");
 const utils = require("zebrajs/lib/utils");
 const files = {};
 
+const sent = {};
+const send = [];
+var timeout;
+var lastSent = Infinity;
+var dups = 0;
+
 function readFile (fileId) {
     return new Promise(function (resolve, reject) {
         const f = files[fileId] = files[fileId] || {
@@ -21,7 +27,7 @@ function readFile (fileId) {
 const z = new Z({
     readFile,
     settings: {
-        depth: 10
+        // depth: 5
     }
 });
 
@@ -53,12 +59,15 @@ function getQuery (branch) {
 }
 
 function getInfo (branch) {
+    var result = '';
+    
     switch (branch.data.action) {
         case 'init':
-            return '';
+            result = '';
+            break;
         
         case 'definitions':
-            return `
+            result = `
             <br>
             Definitions:<br>
             ${
@@ -67,12 +76,14 @@ function getInfo (branch) {
                 ).join("<br>")
             }
             `;
-
+            break;
+            
         case 'query':
-            return getQuery(branch);
+            result = getQuery(branch);
+            break;
             
         case 'unify':
-            return `
+            result = `
                 <br>
                 <div class='box'>
                 p: ${utils.toString(z.zvs.getObject(branch.data.parent, branch.data.args[0]), true)}
@@ -83,17 +94,18 @@ function getInfo (branch) {
                 <br>
                 ${getQuery(branch)}
             `;
+            break;
     }
     
-    return '';
+    return result + `<br>JSON: <div class='box'>${
+        JSON.stringify(branch, null, '\t')
+            .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+            .replace(/\n/g, "<br>")
+    }</div><br>`;
 }
 
 
-const sent = {};
-const send = [];
-var timeout;
-var lastSent = Infinity;
-var dups = 0;
+
 
 z.events.on('branch', function ({branchId}) {
     if (!sent[branchId]) {
